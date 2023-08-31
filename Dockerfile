@@ -44,6 +44,7 @@ RUN --mount=type=cache,target=/root/.cache/microdnf:rw \
        tar \
        gzip \
        maven \
+       git \
     && true
 
 # Install etcd -- used for CI tests
@@ -73,6 +74,11 @@ ENV MAVEN_OPTS="-Dfile.encoding=UTF8"
 
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B package -DskipTests=true --file pom.xml
+
+# Assume that source code comes from a Git repository
+RUN echo "$(date '+%Y%m%d')-$(git rev-parse HEAD | cut -c -5)" > target/dockerhome/build-version && \
+  echo "$(git rev-parse HEAD)" > target/dockerhome/release && \
+  echo "$(git branch --show-current|sed 's/^release-//g')-$(git branch --show-current)_$(date '+%Y%m%d')-$(git rev-parse HEAD | cut -c -5)" > target/dockerhome/version
 
 
 ###############################################################################
@@ -124,18 +130,19 @@ RUN --mount=type=cache,target=/root/.cache/microdnf:rw \
 
 # wait to create commit-specific LABEL until end of the build to not unnecessarily
 # invalidate the cached image layers
-ARG imageVersion
-ARG buildId
-ARG commitSha
+# ARG imageVersion
+# ARG buildId
+# ARG commitSha
 
-RUN echo "${buildId}" > /opt/kserve/mmesh/build-version
+# Generated at build stage
+# RUN echo "${buildId}" > /opt/kserve/mmesh/build-version
 
 LABEL name="model-mesh" \
       vendor="KServe" \
-      version="${imageVersion}" \
+#      version="${imageVersion}" \
       summary="Core model-mesh sidecar image" \
       description="Model-mesh is a distributed LRU cache for serving runtime models" \
-      release="${commitSha}" \
+#      release="${commitSha}" \
       maintainer="nickhill@us.ibm.com"
 
 EXPOSE 8080

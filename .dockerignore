@@ -5,7 +5,6 @@
 .cache
 .dockerignore
 .env
-.git
 .github
 .gitignore
 .idea
